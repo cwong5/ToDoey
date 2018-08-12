@@ -9,15 +9,61 @@
 import UIKit
 
 class ToDoListVIewController: UITableViewController {
+    
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    var itemArray = [Item]()
+
+    
+    func saveItems() {
+        
+        
+        let encoder = PropertyListEncoder()
+        
+        do {
+            let data = try encoder.encode(itemArray)
+            
+            try data.write(to: dataFilePath!)
+        } catch {
+            print(error)
+            
+            
+        }
+        
+        
+        
+    }
+    
+    
+    func loadItems() {
+        
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            
+        let decode = PropertyListDecoder()
+            
+            do {
+                itemArray = try decode.decode([Item].self, from: data)
+
+            } catch {
+                print (error)
+                
+            }
+            
+        }
+        
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
+        print(dataFilePath)
 
         
-        let newItem = Item()
-        newItem.title = "New Mike"
-        itemArray.append(newItem)
-        
+//        let newItem = Item()
+//        newItem.title = "New Mike"
+//        itemArray.append(newItem)
+
+        loadItems()
         
         
 
@@ -25,9 +71,7 @@ class ToDoListVIewController: UITableViewController {
     
 
 
-    var itemArray = [Item]()
     
-    let defaults = UserDefaults.standard
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
@@ -56,6 +100,8 @@ class ToDoListVIewController: UITableViewController {
         
         tempItem.done = !tempItem.done
         
+        self.saveItems()
+        
         tableView.reloadData()
         
    
@@ -79,7 +125,13 @@ class ToDoListVIewController: UITableViewController {
             
             let tempItem = Item()
             tempItem.title = textField.text!
-                self.itemArray.append(tempItem)
+            self.itemArray.append(tempItem)
+            
+            //MARK: Save to DB here
+            
+            self.saveItems()
+                
+           
             
             
             self.tableView.reloadData()
