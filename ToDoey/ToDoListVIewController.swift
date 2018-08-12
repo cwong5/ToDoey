@@ -13,11 +13,18 @@ class ToDoListVIewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        
+        
+        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+            itemArray = items
+        }
     }
     
 
 
     var itemArray = ["First item", "Second item", "third item"]
+    
+    let defaults = UserDefaults.standard
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
@@ -63,6 +70,9 @@ class ToDoListVIewController: UITableViewController {
             print(textField.text)
             
             self.itemArray.append(textField.text!)
+            
+            self.defaults.set(self.itemArray, forKey: "TodoListArray")
+            
             self.tableView.reloadData()
         }
         alert.addTextField { (alertTextdField) in
