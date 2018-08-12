@@ -12,26 +12,36 @@ class ToDoListVIewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+
+        
+        let newItem = Item()
+        newItem.title = "New Mike"
+        itemArray.append(newItem)
         
         
-        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
-            itemArray = items
-        }
+        
+
     }
     
 
 
-    var itemArray = ["First item", "Second item", "third item"]
+    var itemArray = [Item]()
     
     let defaults = UserDefaults.standard
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
-        cell.textLabel?.text = itemArray[indexPath.row]
+        
+        let item = itemArray[indexPath.row]
+        cell.textLabel?.text = item.title
+        
+        cell.accessoryType = item.done == true ? .checkmark: .none
+        
+      
         
         return cell
+        
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -40,17 +50,15 @@ class ToDoListVIewController: UITableViewController {
     
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print (itemArray[indexPath.row])
         
-        if tableView.cellForRow(at: indexPath)?.accessoryType != .checkmark {
-            tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-
-        } else {
-            tableView.cellForRow(at: indexPath)?.accessoryType = .none
-
-        }
-        tableView.deselectRow(at: indexPath, animated: true)
         
+        let tempItem = itemArray[indexPath.row]
+        
+        tempItem.done = !tempItem.done
+        
+        tableView.reloadData()
+        
+   
     }
     
     
@@ -69,9 +77,10 @@ class ToDoListVIewController: UITableViewController {
             // Add action here
             print(textField.text)
             
-            self.itemArray.append(textField.text!)
+            let tempItem = Item()
+            tempItem.title = textField.text!
+                self.itemArray.append(tempItem)
             
-            self.defaults.set(self.itemArray, forKey: "TodoListArray")
             
             self.tableView.reloadData()
         }
