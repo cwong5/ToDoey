@@ -7,51 +7,47 @@
 //
 
 import UIKit
+import CoreData
 
 class ToDoListVIewController: UITableViewController {
     
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     var itemArray = [Item]()
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+
 
     
     func saveItems() {
         
-        
-        let encoder = PropertyListEncoder()
-        
         do {
-            let data = try encoder.encode(itemArray)
-            
-            try data.write(to: dataFilePath!)
+            try context.save()
         } catch {
-            print(error)
             
-            
+            print (error)
         }
         
-        
+        tableView.reloadData()
+
         
     }
     
     
     func loadItems() {
         
-        if let data = try? Data(contentsOf: dataFilePath!) {
+        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        do {
             
-        let decode = PropertyListDecoder()
+            itemArray = try context.fetch(request)
             
-            do {
-                itemArray = try decode.decode([Item].self, from: data)
-
-            } catch {
-                print (error)
-                
-            }
+        } catch {
+            
+            print (error)
             
         }
-        
     }
 
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -96,13 +92,14 @@ class ToDoListVIewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         
-        let tempItem = itemArray[indexPath.row]
+
         
-        tempItem.done = !tempItem.done
+        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
-        self.saveItems()
+       saveItems()
         
-        tableView.reloadData()
+        
+        tableView.deselectRow(at: indexPath, animated: true)
         
    
     }
@@ -123,8 +120,10 @@ class ToDoListVIewController: UITableViewController {
             // Add action here
             print(textField.text)
             
-            let tempItem = Item()
+            
+            let tempItem = Item(context: self.context)
             tempItem.title = textField.text!
+            tempItem.done = false
             self.itemArray.append(tempItem)
             
             //MARK: Save to DB here
@@ -146,6 +145,24 @@ class ToDoListVIewController: UITableViewController {
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
         
+    }
+    
+//    context.delete(itemArray[indexPath.row])
+//    itemArray.remove(at: indexPath.row)
+//    saveItems()
+   
+
+    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        return true
+    }
+    
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if (editingStyle == UITableViewCell.EditingStyle.delete) {
+            // handle delete (by removing the data from your array and updating the tableview)
+                context.delete(itemArray[indexPath.row])
+                itemArray.remove(at: indexPath.row)
+                saveItems()
+        }
     }
     
     
