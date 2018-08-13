@@ -13,6 +13,12 @@ class ToDoListVIewController: UITableViewController {
     
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     var itemArray = [Item]()
+    var selectedCategory :Category? {
+        didSet {
+            loadItems()
+            
+        }
+    }
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
 
 
@@ -33,7 +39,19 @@ class ToDoListVIewController: UITableViewController {
     }
     
     
-    func loadItems(with request:NSFetchRequest<Item> = Item.fetchRequest()) {
+    func loadItems(with request:NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
+        
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+        
+      
+        if let additionalPredicate = predicate {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+            
+        } else {
+            request.predicate = categoryPredicate
+
+        }
+        
         
         do {
             
@@ -58,7 +76,7 @@ class ToDoListVIewController: UITableViewController {
         
 
 
-        loadItems()
+//        loadItems()
         
 
     }
@@ -122,16 +140,16 @@ class ToDoListVIewController: UITableViewController {
             let tempItem = Item(context: self.context)
             tempItem.title = textField.text!
             tempItem.done = false
+            tempItem.parentCategory = self.selectedCategory
             self.itemArray.append(tempItem)
             
             //MARK: Save to DB here
             
             self.saveItems()
-                
-           
-            
-            
+       
             self.tableView.reloadData()
+            
+            
         }
         alert.addTextField { (alertTextdField) in
             alertTextdField.placeholder = "Create new item"
@@ -176,10 +194,11 @@ extension ToDoListVIewController: UISearchBarDelegate {
         
         let request : NSFetchRequest<Item> = Item.fetchRequest()
         
-        request.predicate  = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+       let predicate  = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
         request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
         
         loadItems(with: request)
+        loadItems(with: request, predicate: predicate)
         
         
     }
